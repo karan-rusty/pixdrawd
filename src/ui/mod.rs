@@ -3,6 +3,7 @@ mod col;
 mod header;
 mod layout;
 mod palette_bar;
+mod status;
 
 pub(crate) use col::init_from_config;
 
@@ -16,3 +17,4 @@ pub use palette_bar::render_color_input;
 pub use palette_bar::render_color_picker;
 pub use palette_bar::render_color_selector;
 pub use palette_bar::render_palette_bar;
+pub use status::render_status_bar;
