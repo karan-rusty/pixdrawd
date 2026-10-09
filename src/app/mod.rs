@@ -1,3 +1,4 @@
+mod history;
 pub mod tab;
 
 use std::collections::VecDeque;
