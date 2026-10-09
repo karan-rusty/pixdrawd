@@ -1,4 +1,5 @@
 mod draw;
+mod event;
 mod history;
 mod mouse;
 mod popup;
