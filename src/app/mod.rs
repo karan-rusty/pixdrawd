@@ -8,11 +8,13 @@ use std::collections::VecDeque;
 use std::ops::{Deref, DerefMut};
 
 use ratatui::{
+    Frame,
     layout::{Position, Rect},
-    style::Color,
+    style::{Color, Style},
 };
 
 use crate::palette::Palette;
+use crate::ui;
 
 pub use tab::TabData;
 
@@ -368,5 +370,151 @@ impl DrawingApp {
     pub fn color_to_hex(c: &Color) -> String {
         let (r, g, b) = crate::app::draw::color_to_rgb(*c);
         format!("#{:02X}{:02X}{:02X}", r, g, b)
+    }
+}
+
+impl DrawingApp {
+    pub fn render(&mut self, frame: &mut Frame<'_>) {
+        let area = frame.area();
+        let (header, _body, footer, status_area, canvas_area) = ui::layout(area);
+        self.palette_bar_area = footer;
+
+        let current = self.draw_color();
+        let pal_slice: Vec<(Color, &str)> = self
+            .palette
+            .colors
+            .iter()
+            .map(|(c, n)| (*c, n.as_str()))
+            .collect();
+        ui::render_palette_bar(
+            frame,
+            footer,
+            current,
+            &pal_slice,
+            &self.custom_colors,
+            self.custom_color_override,
+        );
+
+        let online = self.peers.len() + 1;
+        let who = if self.username.is_empty() {
+            "you".to_string()
+        } else {
+            self.username.clone()
+        };
+        let presence = format!("{who}  ·  {online} online · {}", self.tab.name);
+
+        ui::render_header(
+            frame,
+            header,
+            self.text_mode,
+            self.brush_size,
+            current,
+            &self.current_display_name(),
+            &self.mode_string(),
+            &presence,
+        );
+
+        ui::render_canvas(
+            self,
+            frame,
+            canvas_area,
+            self.canvas_width,
+            self.canvas_height,
+            self.shape_preview,
+        );
+
+        if self.show_grid {
+            ui::render_grid(frame, canvas_area);
+        }
+
+        ui::render_text_overlay(self, frame, canvas_area);
+
+        if let Some(anchor) = self
+            .shape_anchor
+            .or(self.line_anchor)
+            .or(self.gradient_anchor)
+        {
+            let (ix, iy) = (canvas_area.x + 1 + anchor.x, canvas_area.y + 1 + anchor.y);
+            if let Some(cell) = frame.buffer_mut().cell_mut(Position::new(ix, iy)) {
+                cell.set_char('+')
+                    .set_style(Style::default().fg(Color::Cyan));
+            }
+        }
+
+        if self.select_mode
+            && let (Some(start), Some(end)) = (self.selection_start, self.selection_end)
+        {
+            let (x1, x2) = (start.x.min(end.x), start.x.max(end.x));
+            let (y1, y2) = (start.y.min(end.y), start.y.max(end.y));
+            let ix0 = canvas_area.x + 1;
+            let iy0 = canvas_area.y + 1;
+            for x in x1..=x2 {
+                for (y, _is_y1) in [(y1, true), (y2, false)] {
+                    if let Some(cell) = frame.buffer_mut().cell_mut(Position::new(ix0 + x, iy0 + y))
+                        && cell.symbol() == " "
+                    {
+                        cell.set_char('·')
+                            .set_style(Style::default().fg(Color::Cyan));
+                    }
+                }
+            }
+            for y in y1..=y2 {
+                for (x, _is_x1) in [(x1, true), (x2, false)] {
+                    if let Some(cell) = frame.buffer_mut().cell_mut(Position::new(ix0 + x, iy0 + y))
+                        && cell.symbol() == " "
+                    {
+                        cell.set_char('·')
+                            .set_style(Style::default().fg(Color::Cyan));
+                    }
+                }
+            }
+        }
+
+        ui::render_cursor_preview(self, frame, canvas_area);
+
+        let current_name = self.palette.name();
+        let hex = Self::color_to_hex(&current);
+        ui::render_status_bar(
+            frame,
+            status_area,
+            self.mouse_position,
+            self.canvas_area,
+            self.points.len(),
+            self.brush_size,
+            &self.color_history,
+            current,
+            current_name,
+            &hex,
+        );
+
+        if self.show_context_menu {
+            ui::render_context_menu(frame, area, &self.context_menu_pos, self.context_menu_idx);
+            return;
+        }
+        if self.show_canvas_resize {
+            ui::render_canvas_resize_dialog(frame, area, &self.canvas_resize_buffer);
+            return;
+        }
+
+        if self.show_color_picker {
+            ui::render_color_picker(self, frame, canvas_area);
+        }
+        if self.show_color_selector {
+            ui::render_color_selector(frame, area, &self.custom_colors, self.color_selector_idx);
+        }
+        if self.show_color_input {
+            ui::render_color_input(frame, area, &self.color_input_buffer);
+        }
+        if self.show_help {
+            ui::render_help_popup(
+                frame,
+                area,
+                &self.help_cat_expanded,
+                self.help_selected,
+                self.help_scroll,
+                &self.help_search_buffer,
+                self.help_search_active,
+            );
+        }
     }
 }
