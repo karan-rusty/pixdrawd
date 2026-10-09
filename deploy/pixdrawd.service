@@ -1,0 +1,13 @@
+[Unit]
+Description=pixdrawd - multiplayer pixel art over SSH
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/pixdrawd
+ExecStart=%h/pixdrawd/target/release/pixdrawd --bind :: --port 2222 --host-key %h/pixdrawd/host_key
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=default.target

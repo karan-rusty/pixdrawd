@@ -1,6 +1,7 @@
 mod app;
 mod config;
 mod palette;
+mod server;
 mod ui;
 
 use clap::Parser;
@@ -22,16 +23,16 @@ struct Args {
     host_key: String,
 }
 
-fn main() -> anyhow::Result<()> {
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
     let args = Args::parse();
     let cfg = config::load();
     ui::init_from_config(&cfg.theme);
-    println!(
-        "pixdrawd would listen on {}:{} (host key: {}) with {} palette colours",
-        args.bind,
-        args.port,
-        args.host_key,
-        cfg.palette.colors.len(),
-    );
-    Ok(())
+
+    server::run(server::Options {
+        bind: args.bind,
+        port: args.port,
+        host_key: args.host_key,
+    })
+    .await
 }
