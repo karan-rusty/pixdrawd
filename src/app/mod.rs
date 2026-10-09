@@ -1,5 +1,6 @@
 mod draw;
 mod history;
+mod selection;
 pub mod tab;
 
 use std::collections::VecDeque;
