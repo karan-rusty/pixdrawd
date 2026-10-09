@@ -1,5 +1,6 @@
 mod config;
 mod palette;
+mod ui;
 
 use clap::Parser;
 
@@ -23,6 +24,7 @@ struct Args {
 fn main() -> anyhow::Result<()> {
     let args = Args::parse();
     let cfg = config::load();
+    ui::init_from_config(&cfg.theme);
     println!(
         "pixdrawd would listen on {}:{} (host key: {}) with {} palette colours",
         args.bind,
