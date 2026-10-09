@@ -1,3 +1,5 @@
+mod config;
+
 use clap::Parser;
 
 #[derive(Parser)]
@@ -19,9 +21,13 @@ struct Args {
 
 fn main() -> anyhow::Result<()> {
     let args = Args::parse();
+    let cfg = config::load();
     println!(
-        "pixdrawd would listen on {}:{} (host key: {})",
-        args.bind, args.port, args.host_key,
+        "pixdrawd would listen on {}:{} (host key: {}) with {} palette colours",
+        args.bind,
+        args.port,
+        args.host_key,
+        cfg.palette.colors.len(),
     );
     Ok(())
 }
