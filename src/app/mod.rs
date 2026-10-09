@@ -1,3 +1,4 @@
+mod draw;
 mod history;
 pub mod tab;
 
@@ -360,5 +361,10 @@ impl DrawingApp {
                 .y
                 .wrapping_add_signed(if dy >= 0 { len } else { -len }),
         )
+    }
+
+    pub fn color_to_hex(c: &Color) -> String {
+        let (r, g, b) = crate::app::draw::color_to_rgb(*c);
+        format!("#{:02X}{:02X}{:02X}", r, g, b)
     }
 }
