@@ -1,0 +1,33 @@
+[package]
+name = "pixdrawd"
+version = "0.1.0"
+edition = "2024"
+description = "Multiplayer terminal pixel-art editor over SSH"
+license = "MIT"
+readme = "README.md"
+keywords = ["pixel-art", "editor", "terminal", "ratatui", "ssh"]
+categories = ["command-line-utilities", "graphics"]
+
+[dependencies]
+# Terminal control + backend. crossterm supplies the Event/Key/Mouse types the
+# editor already speaks; ratatui renders widgets. terminput-crossterm requires
+# crossterm 0.29.
+crossterm = "0.29"
+ratatui = "0.30"
+
+# SSH server. russh's default crypto backend is aws-lc-rs.
+russh = "0.60"
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "net", "sync", "time"] }
+
+# Turns raw bytes from an SSH channel into crossterm Events. The parser is
+# crossterm's own, extracted for exactly this (non-TTY / SSH) use case.
+terminput = "0.5"
+terminput-crossterm = "0.4"
+
+# Host key generation when none exists yet (matches russh's rand_core).
+rand = "0.10"
+
+clap = { version = "4.5", features = ["derive"] }
+anyhow = "1.0"
+toml = "0.8"
+serde = { version = "1", features = ["derive"] }
