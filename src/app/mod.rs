@@ -1,5 +1,6 @@
 mod draw;
 mod history;
+mod popup;
 mod selection;
 pub mod tab;
 
